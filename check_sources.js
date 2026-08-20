@@ -1,3 +1,6 @@
+const https = require('https');
+const http = require('http');
+
 const sources = [
   "https://gitverse.ru/api/repos/bywarm/rser/raw/branch/master/selected.txt",
   "https://gitverse.ru/api/repos/bywarm/rser/raw/branch/master/wl.txt",
@@ -111,23 +114,52 @@ const sources = [
   "https://codeberg.org/kfwl/sub/raw/branch/main/sub.txt"
 ];
 
-async function checkUrl(url) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4000);
-  try {
-    const res = await fetch(url, { method: 'HEAD', signal: controller.signal });
-    clearTimeout(timeoutId);
-    return { url, alive: res.ok || res.status < 400 };
-  } catch (e) {
-    return { url, alive: false };
-  }
+function checkUrl(url) {
+  return new Promise((resolve) => {
+    const isHttps = url.startsWith('https');
+    const client = isHttps ? https : http;
+    
+    const options = {
+      headers: {
+        'User-Agent': 'v2rayN/6.23 Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Accept': '*/*'
+      }
+    };
+
+    const req = client.get(url, options, (res) => {
+      // Принимаем успешные статусы и редиректы (200-399)
+      if (res.statusCode >= 200 && res.statusCode < 400) {
+        resolve({ url, alive: true });
+      } else {
+        resolve({ url, alive: false, code: res.statusCode });
+      }
+      res.resume(); // Освобождаем память
+    });
+
+    req.on('error', () => resolve({ url, alive: false }));
+    req.on('timeout', () => { req.destroy(); resolve({ url, alive: false }); });
+    
+    // Увеличиваем таймаут до 10 секунд
+    req.setTimeout(10000);
+  });
 }
 
 async function run() {
-  console.log(`🔎 Проверяем ${sources.length} ссылок...`);
-  const results = await Promise.all(sources.map(checkUrl));
-  const alive = results.filter(r => r.alive).map(r => r.url);
-  console.log(`\n✅ Живых источников: ${alive.length} из ${sources.length}\n`);
+  console.log(`🔎 Проверяем ${sources.length} ссылок (полный GET-запрос)...`);
+  
+  // Проверяем параллельно небольшими пачками по 10 штук, чтобы серверы не блокировали за спам
+  const alive = [];
+  const chunkSize = 10;
+  
+  for (let i = 0; i < sources.length; i += chunkSize) {
+    const chunk = sources.slice(i, i + chunkSize);
+    const results = await Promise.all(chunk.map(checkUrl));
+    results.forEach(r => {
+      if (r.alive) alive.push(r.url);
+    });
+  }
+
+  console.log(`\n✅ Точно живых источников: ${alive.length} из ${sources.length}\n`);
   console.log(JSON.stringify(alive, null, 2));
 }
 

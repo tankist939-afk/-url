@@ -674,7 +674,7 @@ const sources = [
   "https://raw.githubusercontent.com/Edudotnexx/friendly-sniffle/refs/heads/main/configs/channel_stats.json",
   "https://raw.githubusercontent.com/Edudotnexx/friendly-sniffle/refs/heads/main/configs/proxy_configs.txt",
   "https://raw.githubusercontent.com/EdwardBerman/shopt/ee290766d752151a7391a1d13fc4e27b394d6b24/path.txt",
-  "https://raw.githubusercontent.com/EdwardBerman/shopt/main/path.txt"
+  "https://raw.githubusercontent.com/EdwardBerman/shopt/main/path.txt",
   "https://raw.githubusercontent.com/Egkaz/Proxy-list-20k-server/main/stable.txt",
   "https://raw.githubusercontent.com/EgorHenek/deployment/f35a6785750949dfc1709cea55f66d9bd628cf55/playbooks/xray-setup.yml",
   "https://raw.githubusercontent.com/EkkoG/subio/43af80385d021d5b7d351a63f6720f8cffa26a4d/example/provider/meta.yaml",
